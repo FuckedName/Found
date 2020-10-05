@@ -1,3 +1,7 @@
+# Support OS：
+* Linux
+<br />
+
 #  Install:
 * chmod +x Install.sh
 * ./Install.sh
