@@ -22,11 +22,11 @@
 // `(near by keys of number 1 and ESC)
 
 
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
-#include <unistd.h>
 #include <termios.h>
 #include <stdbool.h>
 #include <time.h>
@@ -266,6 +266,46 @@ long firstIndex = 0;
 
 long matchLineCount = 1;
 
+int printWithColor(char *pcString)
+{
+    //PRINT_WITH_TIME("%s", pcString)
+    printf("" L_RED "%s" NONE "", pcString);
+}
+
+void normal_match(char * s,char * p)
+{
+    int sLength = strlen(s);
+    int pLength = strlen(p);
+    int k;
+    int lastMatchedNum = 0;
+    int i;
+    for(i=0;i<sLength;i++)
+    {
+        for(k=0;k<pLength;k++)
+        {
+            if(s[i+k]!=p[k])
+            {
+                break;
+            }
+        }
+        if(k==pLength)
+        {
+            if(lastMatchedNum == 0)
+            {
+                printf("%.*s", i, s);
+            }
+            else
+            {
+                printf("%.*s", i - lastMatchedNum - pLength, s + lastMatchedNum + pLength);
+            }
+            //printf("%d \n",i);
+            lastMatchedNum = i;
+            printWithColor(p);
+        }
+    }
+    printf("%.*s", i - lastMatchedNum - pLength, s + lastMatchedNum + pLength);
+}
+
 int searchStringInFile(char *pPath, char *pKey)
 {
     if(NULL == pPath)
@@ -318,47 +358,7 @@ int searchStringInFile(char *pPath, char *pKey)
     return 0;
 }
 
-void normal_match(char * s,char * p)
-{
-    int sLength = strlen(s);
-    int pLength = strlen(p);
-    int k;
-    int lastMatchedNum = 0;
-    int i;
-    for(i=0;i<sLength;i++)
-    {
-        for(k=0;k<pLength;k++)
-        {
-            if(s[i+k]!=p[k])
-            {
-                break;
-            }
-        }
-        if(k==pLength)
-        {
-            if(lastMatchedNum == 0)
-            {
-                printf("%.*s", i, s);
-            }
-            else
-            {
-                printf("%.*s", i - lastMatchedNum - pLength, s + lastMatchedNum + pLength);
-            }
-            //printf("%d \n",i);
-            lastMatchedNum = i;
-            printWithColor(p);
-        }
-    }
-    printf("%.*s", i - lastMatchedNum - pLength, s + lastMatchedNum + pLength);
-}
-
-int printWithColor(char *pcString)
-{
-    //PRINT_WITH_TIME("%s", pcString)
-    printf("" L_RED "%s" NONE "", pcString);
-}
-
-int handleSearch()
+void  *handleSearch()
 {
     //PRINT_WITH_TIME("");
     i = firstIndex;
@@ -525,7 +525,7 @@ int handleSearch()
     {
         //PRINTLN("%d " L_RED "%s" NONE " %ld/%ld %s",
         printf( "Search \"" L_RED  "%s" NONE  "\" result:\n", keys);
-        printf("" L_RED "%d " NONE  "items found, cost" L_RED " %lld " NONE "ms\n", isSearchString ? matchLineCount : --count, (getTime() - start) / 1000);
+        printf("" L_RED "%ld " NONE  "items found, cost" L_RED " %lld " NONE "ms\n", isSearchString ? matchLineCount : --count, (getTime() - start) / 1000);
     }
     isSearchRunning = false;
 
@@ -730,13 +730,13 @@ int main (void)
     while(NULL != (fgets(basePath, PATH_LENGTH, fp_config_file)))
     {
         //PRINT_WITH_TIME("get path in config.txt:%s", basePath);
-        if('\+' == basePath[0])
+        if(43 == basePath[0]) // '+'
         {
             memcpy(handleIncludePath[IncludePathCount], basePath + 1, strlen(basePath) - 2); //+ and \0
             PRINT_WITH_TIME("Include path:%s", handleIncludePath[IncludePathCount]);
             IncludePathCount++;
         }
-        else if('\-' == basePath[0])
+        else if( 45 == basePath[0]) // '-'
         {
             memcpy(handleExcludePath[ExcludePathCount], basePath + 1, strlen(basePath) - 2); //+ and \0
             PRINT_WITH_TIME("Exclude path:%s", handleExcludePath[ExcludePathCount]);
@@ -765,7 +765,7 @@ int main (void)
     //添加排除目录
     PRINTLN("Read files end");
 
-    PRINTLN("Files count:%d, pathLengthAll:%lld, perPathLength:%d", fileCount, pathLengthAll, pathLengthAll/fileCount);
+    PRINTLN("Files count:%ld, pathLengthAll:%lld, perPathLength:%lld", fileCount, pathLengthAll, pathLengthAll/fileCount);
 
     newfileCount = fileCount;
 
@@ -775,7 +775,7 @@ int main (void)
     int res = pthread_create(&th_A, NULL, (void*)&handleRead, NULL);
     if(res != 0)
     {
-        PRINT_WITH_TIME("");
+        //PRINT_WITH_TIME("");
         exit(EXIT_FAILURE);
     }
 
@@ -783,7 +783,7 @@ int main (void)
     res = pthread_create(&th_B, NULL, (void*)&handleSearch, NULL);
     if(res != 0)
     {
-        PRINT_WITH_TIME("");
+        //PRINT_WITH_TIME("");
         exit(EXIT_FAILURE);
     }
 
@@ -793,6 +793,6 @@ int main (void)
     {
         usleep(1000);
     }
-    PRINT_WITH_TIME("");
+    //PRINT_WITH_TIME("");
 
 }
