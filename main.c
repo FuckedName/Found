@@ -13,10 +13,10 @@
 // 123(Space Key)456(Space Key)789
 //
 // 2、Search path or file name include 123 and search the text contain 456:
-// 123(tab)456
+// 123(TAB)456
 //
 // 3、Clear history input keys:
-// key1(Enter)
+// key1(SPACE or TAB) key2(ENTER)
 //
 // 4、Clear update index:
 // `(near by keys of number 1 and ESC)
