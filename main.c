@@ -17,6 +17,9 @@
 //
 // 3、Clear history input keys:
 // key1(Enter)
+//
+// 4、Clear update index:
+// `(near by keys of number 1 and ESC)
 
 
 #include <stdio.h>
