@@ -688,10 +688,6 @@ void handleRead(void)
         }
         else
         {
-            if (96 == x)
-            {
-                system("Found");
-            }
             printf("Illagel input!!: %d\n", x);
         }
 
