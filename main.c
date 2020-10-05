@@ -10,18 +10,11 @@
 #include <time.h>
 #include <sys/time.h>
 #include <pthread.h>
-#include <linux/inotify.h>
 
-pthread_t th_A,th_B,th_C;
+pthread_t th_A,th_B;
 
 time_t now;
 struct tm *tm_now;
-
-#define PRINT_ONLY_TIME(...)time(&now);\
-                            tm_now = localtime(&now);\
-                           printf("%02d-%02d-%02d %02d:%02d:%02d ",tm_now->tm_year+1900, tm_now->tm_mon, tm_now->tm_mday, tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec); \
-                            printf(__VA_ARGS__); \
-                            printf("\n");
 
 #define PRINT_WITH_TIME(...)time(&now);\
                             tm_now = localtime(&now);\
@@ -29,41 +22,11 @@ struct tm *tm_now;
                             printf(__VA_ARGS__); \
                             printf("\n");
 
-#define PRINT_WITH_TIME_NOLN(...)time(&now);\
-                            tm_now = localtime(&now);\
-                            printf("%02d-%02d-%02d %02d:%02d:%02d FILE:%s LINE:%d FUNC:%s ",tm_now->tm_year+1900, tm_now->tm_mon, tm_now->tm_mday, tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec, __FILE__, __LINE__, __FUNCTION__); \
-                            printf(__VA_ARGS__);
-
 #define PRINTLN(...) printf(__VA_ARGS__); \
                             printf("\n");
 
-static int flag = 1;
-
 #define NONE                 "\e[0m"
-#define BLACK                "\e[0;30m"
-#define L_BLACK              "\e[1;30m"
-#define RED                  "\e[0;31m"
 #define L_RED                "\e[1;31m"
-#define GREEN                "\e[0;32m"
-#define L_GREEN              "\e[1;32m"
-#define BROWN                "\e[0;33m"
-#define YELLOW               "\e[1;33m"
-#define BLUE                 "\e[0;34m"
-#define L_BLUE               "\e[1;34m"
-#define PURPLE               "\e[0;35m"
-#define L_PURPLE             "\e[1;35m"
-#define CYAN                 "\e[0;36m"
-#define L_CYAN               "\e[1;36m"
-#define GRAY                 "\e[0;37m"
-#define WHITE                "\e[1;37m"
-
-#define BOLD                 "\e[1m"
-#define UNDERLINE            "\e[4m"
-#define BLINK                "\e[5m"
-#define REVERSE              "\e[7m"
-#define HIDE                 "\e[8m"
-#define CLEAR                "\e[2J"
-#define CLRLINE              "\r\e[K" //or "\e[1K\r"
 
 bool isSearchRunning = false;
 bool isSearchString = false;
@@ -79,12 +42,6 @@ char handleExcludePath[PATH_NUM][PATH_LENGTH];
 char pathTemp[PATH_LENGTH] = {0};
 #define KEY_LENGTH 100
 #define STRING_LENGTH 20
-#define PRINT_LOG(...) printf("%s %s %d ", __FILE__, __FUNCTION__, __LINE__); \
-                            printf(__VA_ARGS__); \
-                            printf("\n");
-
-#define EVENT_SIZE ( sizeof (struct inotify_event) )
-#define EVENT_BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
 
 long fileCount = 0;
 long allCount = 0;
@@ -100,7 +57,7 @@ bool isNewKey = false;
 typedef struct
 {
     char *path;
-    int nextIndex;
+    long nextIndex;
     int d_type;
 }ITEM, *PITEM;
 
@@ -153,7 +110,6 @@ int addFile(const char *path, int d_type)
 
 FILE *InitConfigFile(const char *puc_FileName)
 {
-
     FILE *pFile = fopen(puc_FileName, "r");
 
     if (pFile == NULL)
@@ -219,7 +175,6 @@ int readAllFile(char *basePath)
                 {
                     readAllFile(base);
                 }
-
             }
             fileCount++;
             if(fileCount % 100000 == 0)
@@ -239,7 +194,7 @@ long long getTime()
 {
     struct timeval tim;
     gettimeofday (&tim , NULL);
-    return (long long)tim.tv_sec*1000000+tim.tv_usec;
+    return (long long)tim.tv_sec * 1000000 + tim.tv_usec;
 }
 
 bool isSearchOver = false;
@@ -263,16 +218,16 @@ void normal_match(char * s,char * p)
     int k;
     int lastMatchedNum = 0;
     int i;
-    for(i=0;i<sLength;i++)
+    for(i = 0; i < sLength; i++)
     {
-        for(k=0;k<pLength;k++)
+        for(k = 0; k < pLength; k++)
         {
-            if(s[i+k]!=p[k])
+            if(s[i + k] != p[k])
             {
                 break;
             }
         }
-        if(k==pLength)
+        if(k == pLength)
         {
             if(lastMatchedNum == 0)
             {
@@ -291,26 +246,18 @@ void normal_match(char * s,char * p)
 
 int searchStringInFile(char *pPath, char *pKey)
 {
-    if(NULL == pPath)
+    if(NULL == pPath || NULL == pKey)
     {
-        PRINT_WITH_TIME("pPath is NULL")
+        PRINT_WITH_TIME("pPath or pKey is NULL")
         return 0;
     }
-
-    if(NULL == pKey)
-    {
-        PRINT_WITH_TIME("pKey is NULL")
-        return 0;
-    }
-
 
     int lineNum = 1;
     char * line = NULL;
     size_t len = 0;
     ssize_t read;
-    int keyLength = (int)strlen(pKey);
 
-    FILE *fp=fopen(pPath,"r");
+    FILE *fp=fopen(pPath, "r");
     if(fp == NULL)
     {
         PRINT_WITH_TIME("open file error")
@@ -354,7 +301,6 @@ void  *handleSearch()
         isResearch = false;
     }
 
-
     if(isNewKey == true && keyCount == 1)
     {
         newfileCount = count;
@@ -371,7 +317,6 @@ void  *handleSearch()
 
     while(1)
     {
-
         temp = pAllFiles[i]->nextIndex;
 
         if(isSearchRunning == false)
@@ -406,7 +351,6 @@ void  *handleSearch()
                 putchar('\n');
             }
 
-
             if(finalMatchedIndex != INVALID_INDEX)
             {
                 pAllFiles[finalMatchedIndex]->nextIndex = i;
@@ -419,14 +363,12 @@ void  *handleSearch()
 
                 normal_match(pAllFiles[i]->path, key);
                 putchar('\n');
-
             }
 
             pAllFiles[i]->nextIndex = INVALID_INDEX;
             finalMatchedIndex = i;
             count++;
         }
-
 
         if(isNewKey == true)
         {
@@ -464,7 +406,6 @@ void  *handleSearch()
     }
     isSearchRunning = false;
 
-    /*PRINT_LOG("");*/
     pthread_exit("slave_thread!!");
 }
 
@@ -577,20 +518,25 @@ void handleRead(void)
         {
             matchLineCount = 0;
             isSearchOver = false;
-            if (isSearchRunning) {
+            if (isSearchRunning)
+            {
                 pthread_cancel(th_B);
                 isSearchRunning = false;
                 usleep(1000);
             }
-            if (isNewKey != true) {
+            if (isNewKey != true)
+            {
                 isSearchRunning = false;
                 usleep(1000);
             }
 
-            if (isSearchString) {
+            if (isSearchString)
+            {
                 string[stringKeyCount++] = x;
                 keys[keysCount++] = x;
-            } else {
+            }
+            else
+            {
                 key[keyCount++] = x;
                 keys[keysCount++] = x;
             }
@@ -659,8 +605,6 @@ int main (void)
     PRINTLN("Files count:%ld, pathLengthAll:%lld, perPathLength:%lld", fileCount, pathLengthAll, pathLengthAll/fileCount);
 
     newfileCount = fileCount;
-
-    void *thread_result;
 
     int res = pthread_create(&th_A, NULL, (void*)&handleRead, NULL);
     if(res != 0)
