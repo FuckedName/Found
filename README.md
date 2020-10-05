@@ -1,5 +1,5 @@
 #  compile command:
-* gcc -g -rdynamic -o Found main.c  -std=c99 -lpthread
+* chmod +x Install.sh
 
 <br />
 
