@@ -21,15 +21,15 @@ add paths per line in config.txt like this:
 
 <br />
 
-##How to use:
+## How to use:
 * Search path or file name include with 123 and 456 and 789 in the same time:
     *  123(Space Key)456(Space Key)789
     
-      <br /> 
+      <br/> 
 * Search path or file name include 123 and search the text contain 456:
     *  123(TAB)456
     
-      <br /> 
+      <br/> 
     
 * Clear history input keys:
     *  key1(SPACE or TAB) key2(ENTER)
