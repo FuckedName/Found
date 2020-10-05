@@ -1,27 +1,5 @@
 // by renqihong
 
-// compile:
-// gcc -g -rdynamic -o main main.c  -std=c99 -lpthread
-
-// execute: ./main
-//
-// Config search paths:config.txt
-// add a path per line in config.txt like this:
-//
-// How to use:
-// 1、Search path or file name include with 123 and 456 and 789 in the same time:
-// 123(Space Key)456(Space Key)789
-//
-// 2、Search path or file name include 123 and search the text contain 456:
-// 123(TAB)456
-//
-// 3、Clear history input keys:
-// key1(SPACE or TAB) key2(ENTER)
-//
-// 4、Clear update index:
-// `(near by keys of number 1 and ESC)
-
-
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +10,6 @@
 #include <time.h>
 #include <sys/time.h>
 #include <pthread.h>
-//#include <fcntl.h>
 #include <linux/inotify.h>
 
 pthread_t th_A,th_B,th_C;
@@ -117,11 +94,7 @@ char string[STRING_LENGTH];
 int keyCount = 0;
 int stringKeyCount = 0;
 int keysCount = 0;
-
-// press Enter key
 bool isResearch = false;
-
-// press Space key
 bool isNewKey = false;
 
 typedef struct
@@ -156,7 +129,6 @@ int addFile(const char *path, int d_type)
         return 1;
     }
     pAllFiles[allCount] = (PITEM)malloc(sizeof(ITEM));
-    //PRINT_WITH_TIME("path: %s, size: %d, allCount: %d, sizeof ITEM: %d", path, strlen(path), allCount, sizeof(ITEM));
 
     if (pAllFiles[allCount] == NULL)
     {
@@ -172,7 +144,6 @@ int addFile(const char *path, int d_type)
     strcpy(pAllFiles[allCount]->path, path);
     pAllFiles[allCount]->nextIndex = INVALID_INDEX;
     pAllFiles[allCount]->d_type= d_type;
-    //PRINT_WITH_TIME("i:%ld %s", allCount, pAllFiles[allCount]->path);
     size += sizeof(ITEM);
     pathLengthAll += size;
     allCount++;
@@ -183,13 +154,10 @@ int addFile(const char *path, int d_type)
 FILE *InitConfigFile(const char *puc_FileName)
 {
 
-    //使用“读入”方式打开文件
     FILE *pFile = fopen(puc_FileName, "r");
 
-    //如果文件不存在
     if (pFile == NULL)
     {
-        //使用“写入”方式创建文件
         pFile = fopen(puc_FileName, "w");
         int ret = fputs("+/\n", pFile);
         if (EOF == ret)
@@ -201,16 +169,11 @@ FILE *InitConfigFile(const char *puc_FileName)
         fclose(pFile);
     }
 
-    //关闭文件
-    //fclose(pFile);
     return pFile;
 }
 
-
 int readAllFile(char *basePath)
 {
-    //PRINT_WITH_TIME("%s", basePath);
-
     DIR *dir;
     struct dirent *ptr;
 
@@ -218,7 +181,6 @@ int readAllFile(char *basePath)
     {
         PRINT_WITH_TIME("Open dir error...: %s, %ld", basePath, strlen(basePath));
         return 1;
-        //exit(1);
     }
 
     while((ptr = readdir(dir)) != NULL)
@@ -230,7 +192,6 @@ int readAllFile(char *basePath)
         else if(ptr->d_type == 8 || ptr->d_type == 10 || ptr->d_type == 4)    ///file
         {
             char base[PATH_LENGTH];
-            //printf("ptr->d_name length: %d\n", strlen(ptr->d_name));
             memset(base,'\0', PATH_LENGTH);
             memcpy(base, basePath, strlen(basePath));
 
@@ -239,19 +200,16 @@ int readAllFile(char *basePath)
                 strcat(base, "/");
             }
             strcat(base, ptr->d_name);
-            //PRINT_WITH_TIME("%d %d basePath: %s, length: %d", fileCount, folderCount, base, strlen(base));
             addFile(base, ptr->d_type);
 
             if(ptr->d_type == 4)
             {
                 int i = 0;
                 bool andReadList = true;
-                //PRINT_WITH_TIME("ExcludePathCount:%d", ExcludePathCount)
                 for(i = 0; i < ExcludePathCount; i++)
                 {
                     if(NULL != strstr(base, handleExcludePath[i]))
                     {
-                        //readAllFile(base);
                         andReadList = false;
                         break;
                     }
@@ -260,7 +218,6 @@ int readAllFile(char *basePath)
                 if(andReadList)
                 {
                     readAllFile(base);
-                    //PRINT_WITH_TIME("base:%s, exclude path:%s, location:%d", base, handleExcludePath[i], strstr(base, handleExcludePath[i]))
                 }
 
             }
@@ -296,7 +253,6 @@ long matchLineCount = 1;
 
 int printWithColor(char *pcString)
 {
-    //PRINT_WITH_TIME("%s", pcString)
     printf("" L_RED "%s" NONE "", pcString);
 }
 
@@ -326,7 +282,6 @@ void normal_match(char * s,char * p)
             {
                 printf("%.*s", i - lastMatchedNum - pLength, s + lastMatchedNum + pLength);
             }
-            //printf("%d \n",i);
             lastMatchedNum = i;
             printWithColor(p);
         }
@@ -348,14 +303,12 @@ int searchStringInFile(char *pPath, char *pKey)
         return 0;
     }
 
-    //PRINT_WITH_TIME("path:%s key:%s", pPath, pKey);
 
     int lineNum = 1;
     char * line = NULL;
     size_t len = 0;
     ssize_t read;
     int keyLength = (int)strlen(pKey);
-    //PRINT_WITH_TIME("keyLength:%d", keyLength)
 
     FILE *fp=fopen(pPath,"r");
     if(fp == NULL)
@@ -371,7 +324,6 @@ int searchStringInFile(char *pPath, char *pKey)
             printf("%ld %s %d ", matchLineCount, pPath, lineNum);
             normal_match(line, pKey);
             matchLineCount++;
-            //putchar('\n');
         }
 
         lineNum++;
@@ -388,23 +340,13 @@ int searchStringInFile(char *pPath, char *pKey)
 
 void  *handleSearch()
 {
-    //PRINT_WITH_TIME("");
     i = firstIndex;
-    //PRINT_LOG("");
     long long start = getTime();
 
     if(isSearchRunning == false)
     {
         return 0;
     }
-    /*PRINT_WITH_TIME("key:%s, isSearchOver:%d, isSearchRunning:%d, isNewKey: %d, firtsMatchedIndex:%d",
-                    key,
-                    isSearchOver,
-                    isSearchRunning,
-                    isNewKey,
-                    firstMatchedIndex)*/
-
-    //PRINT_WITH_TIME("")
 
     if(isResearch == true)
     {
@@ -412,12 +354,9 @@ void  *handleSearch()
         isResearch = false;
     }
 
-    //PRINT_WITH_TIME("count: %d, keyCount: %d, isNewKey: %d", count, keyCount, isNewKey);
 
     if(isNewKey == true && keyCount == 1)
     {
-        //PRINT_WITH_TIME("new key: %d, keyCount: %d", count, keyCount);
-        //memcpy(AllListTemp, AllListTemp2, count * sizeof(ITEM));
         newfileCount = count;
     }
 
@@ -428,11 +367,8 @@ void  *handleSearch()
 
     finalMatchedIndex = INVALID_INDEX;
     firstMatchedIndex = INVALID_INDEX;
-    //PRINT_WITH_TIME("i:%d", i)
     long temp = 0;
-    //long finalMatchedIndexTemp = finalMatchedIndex;
 
-    //??????????10000ms sleep????
     while(1)
     {
 
@@ -445,34 +381,21 @@ void  *handleSearch()
 
         if(isSearchRunning == false || isSearchOver == true)
         {
-            //PRINT_LOG("");
             break;
         }
 
         char *p = strstr(pAllFiles[i]->path, key);
 
-        // handle search string in text
         if(isSearchString)
         {
-            //PRINT_WITH_TIME("path:%s key:%s", pAllFiles[i]->path, string)
             searchStringInFile(pAllFiles[i]->path, string);
 
         }
-            //printf("%d %s %s\n", i, AllList[i].cs_basePath, AllList[i].cs_name);
         else if(p != NULL)
         {
-            //puts(p);
-            //PRINT_WITH_TIME("%s",p)
             if(firstMatchedIndex == INVALID_INDEX)
             {
                 firstMatchedIndex = i;
-                //PRINT_WITH_TIME("firtsMatchedIndex:%ld", firstMatchedIndex);
-                /*PRINT_WITH_TIME("count:%d key:%s i: %ld, path:%s",
-                       count,
-                       key,
-                       i,
-                       pAllFiles[i]->path);
-            */
                 printf("%d" /*L_RED "%s" NONE*/ " %ld/%ld ",
                        count,
                         /*key,*/
@@ -487,15 +410,6 @@ void  *handleSearch()
             if(finalMatchedIndex != INVALID_INDEX)
             {
                 pAllFiles[finalMatchedIndex]->nextIndex = i;
-                /*PRINT_WITH_TIME("count:%d key:%s %ld/%ld pAllFiles[%d]->nextIndex:%ld path:%s",
-                       count,
-                       key,
-                       i,
-                       newfileCount,
-                       finalMatchedIndex,
-                       pAllFiles[finalMatchedIndex]->nextIndex,
-                       pAllFiles[i]->path);
-                */
 
                 printf("%d" /*L_RED "%s" NONE*/ " %ld/%ld ",
                        count,
@@ -517,7 +431,6 @@ void  *handleSearch()
         if(isNewKey == true)
         {
             i = temp;
-            //PRINT_WITH_TIME("pAllFiles[%ld]->nextIndex:%ld", i, pAllFiles[i]->nextIndex);
             if(i == INVALID_INDEX)
             {
                 break;
@@ -526,10 +439,8 @@ void  *handleSearch()
         else
         {
             i++;
-            //PRINT_WITH_TIME("i: %d", i)
 
         }
-        //PRINT_WITH_TIME("i:%ld, newfileCount:%ld", i, newfileCount);
         if(i == newfileCount)
         {
             break;
@@ -537,11 +448,8 @@ void  *handleSearch()
 
         if(i % 10000 == 0)
         {
-            //PRINT_LOG("Sleep ");
             usleep(1000);
         }
-
-        //PRINT_LOG("key: %s, i: %d, isSearchRunning: %d", key, i, isSearchRunning);
 
     } //for
 
@@ -551,7 +459,6 @@ void  *handleSearch()
     }
     if(isSearchRunning != false)
     {
-        //PRINTLN("%d " L_RED "%s" NONE " %ld/%ld %s",
         printf( "Search \"" L_RED  "%s" NONE  "\" result:\n", keys);
         printf("" L_RED "%ld " NONE  "items found, cost" L_RED " %lld " NONE "ms\n", isSearchString ? matchLineCount : --count, (getTime() - start) / 1000);
     }
@@ -560,7 +467,6 @@ void  *handleSearch()
     /*PRINT_LOG("");*/
     pthread_exit("slave_thread!!");
 }
-
 
 bool isSearch = false;
 
@@ -573,7 +479,6 @@ void handleRead(void)
         usleep(1000);
     }
 
-    //PRINT_WITH_TIME("");
     memset(key, 0, KEY_LENGTH * sizeof(char));
     memset(keys, 0, KEY_LENGTH * sizeof(char));
     memset(string, 0, STRING_LENGTH* sizeof(char));
@@ -581,7 +486,6 @@ void handleRead(void)
     while(1)
     {
         char x=getch();
-        //PRINT_WITH_TIME("%c", x);
 
         isSearch = false;
 
@@ -592,7 +496,6 @@ void handleRead(void)
         }
         else if(x == '\b') //Backspace key: Last char of key deleted
         {
-            //PRINT_WITH_TIME("Backspace");
             printf("Last char of key deleted!\n");
             isSearchRunning = false;
             isSearchOver = false;
@@ -603,22 +506,17 @@ void handleRead(void)
             keysCount--;
             keys[keysCount] = 0;
             isSearch = true;
-            //search(key, isNewKey, isResearch);
 
             isSearchRunning = true;
             if(keyCount > 0 || keysCount >0)
             {
                 pthread_create(&th_B, NULL, handleSearch, NULL);
             }
-            //createSlaveThread();
             usleep(1000);
-            //printResult();
         }
         else if(x == '\n') //Enter key: Clear history inputted keys
         {
-            //PRINT_WITH_TIME("Enter");
             firstMatchedIndex = INVALID_INDEX;
-            //printf("Enter\n");
             printf("All history input keys cleared!\n");
             firstIndex = 0;
             isResearch = true;
@@ -635,7 +533,6 @@ void handleRead(void)
         }
         else if(x == 0x20) //Space key: Handle to search a new key
         {
-            //PRINT_WITH_TIME("Space");
 
             printf("Please input a new key to search base on just now!\n");
 
@@ -644,7 +541,6 @@ void handleRead(void)
             {
                 firstIndex = firstMatchedIndex;
             }
-            //printf("Space\n");
             keys[keysCount++] = ' ';
 
             isSearchString = false;
@@ -669,7 +565,6 @@ void handleRead(void)
             keys[keysCount++] = 's';
             keys[keysCount++] = ':';
             printf("Please input a string search in text base on just now!\n");
-
         }
         else if(x >= '0' && x <= '9'     //Other key: add a new char at the end of current key
                 || x>= 'a' && x <= 'z'
@@ -680,8 +575,6 @@ void handleRead(void)
                 || x == '/'
                 || x == '\\')
         {
-            //PRINT_WITH_TIME("Please input a new char added on current key!");
-            //PRINTLN("Please input a new char added on current key!");
             matchLineCount = 0;
             isSearchOver = false;
             if (isSearchRunning) {
@@ -691,7 +584,6 @@ void handleRead(void)
             }
             if (isNewKey != true) {
                 isSearchRunning = false;
-                //createSlaveThread();
                 usleep(1000);
             }
 
@@ -702,17 +594,11 @@ void handleRead(void)
                 key[keyCount++] = x;
                 keys[keysCount++] = x;
             }
-            //putchar(x);
             putchar('\n');
-            //if(keyCount == 4)
-            //{
             isSearchRunning = true;
-            //search(key, isNewKey, isResearch);
             pthread_create(&th_B, NULL, handleSearch, NULL);
             usleep(1000);
-            //printResult();
             isResearch = false;
-            //}
         }
         else
         {
@@ -762,7 +648,6 @@ int main (void)
     {
         memset(basePath, '\0', sizeof(basePath));
         memcpy(basePath, handleIncludePath[i], strlen(handleIncludePath[i]));
-        //basePath[5] = '\0';
         printf("Add files in path: %s\n", basePath);
         puts(basePath);
         readAllFile(basePath);
@@ -776,20 +661,16 @@ int main (void)
     newfileCount = fileCount;
 
     void *thread_result;
-    //PRINT_WITH_TIME("This is the main process");
 
     int res = pthread_create(&th_A, NULL, (void*)&handleRead, NULL);
     if(res != 0)
     {
-        //PRINT_WITH_TIME("");
         exit(EXIT_FAILURE);
     }
-
 
     res = pthread_create(&th_B, NULL, (void*)&handleSearch, NULL);
     if(res != 0)
     {
-        //PRINT_WITH_TIME("");
         exit(EXIT_FAILURE);
     }
 
@@ -799,6 +680,4 @@ int main (void)
     {
         usleep(1000);
     }
-    //PRINT_WITH_TIME("");
-
 }
