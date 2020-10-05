@@ -32,6 +32,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <pthread.h>
+//#include <fcntl.h>
 #include <linux/inotify.h>
 
 pthread_t th_A,th_B,th_C;
@@ -178,6 +179,33 @@ int addFile(const char *path, int d_type)
 
     return 0;
 }
+
+FILE *InitConfigFile(const char *puc_FileName)
+{
+
+    //使用“读入”方式打开文件
+    FILE *pFile = fopen(puc_FileName, "r");
+
+    //如果文件不存在
+    if (pFile == NULL)
+    {
+        //使用“写入”方式创建文件
+        pFile = fopen(puc_FileName, "w");
+        int ret = fputs("+/\n", pFile);
+        if (EOF == ret)
+        {
+            PRINT_WITH_TIME("Write into config.txt error")
+            fclose(pFile);
+            exit(1);
+        }
+        fclose(pFile);
+    }
+
+    //关闭文件
+    //fclose(pFile);
+    return pFile;
+}
+
 
 int readAllFile(char *basePath)
 {
@@ -690,16 +718,7 @@ void handleRead(void)
         {
             printf("Illagel input!!: %d\n", x);
         }
-
-        //usleep(100000);
     }
-
-    pthread_exit("master_thread!!");
-}
-
-int k = 0;
-void thread_C()
-{
 }
 
 int main (void)
@@ -709,27 +728,15 @@ int main (void)
     PRINTLN("Let's start!");
     char basePath[PATH_LENGTH];
 
-    ///get the current absoulte path
-    //memset(basePath,'\0',sizeof(basePath));
-    getcwd(basePath, 999);
-
-    ///get the file list
-    //memset(basePath,'\0',sizeof(basePath));
-
     memset(handleIncludePath, '\0', PATH_NUM * PATH_LENGTH);
     memset(handleExcludePath, '\0', PATH_NUM * PATH_LENGTH);
 
-    FILE * fp_config_file = fopen("config.txt", "r");
-    if(NULL == fp_config_file)
-    {
-        PRINT_WITH_TIME("open config.txt error");
-        exit(1);
-    }
+    FILE *fp_config_file = InitConfigFile("config.txt");
 
     memset(basePath, '\0', sizeof(basePath));
     while(NULL != (fgets(basePath, PATH_LENGTH, fp_config_file)))
     {
-        //PRINT_WITH_TIME("get path in config.txt:%s", basePath);
+        PRINT_WITH_TIME("get path in config.txt:%s", basePath);
         if(43 == basePath[0]) // '+'
         {
             memcpy(handleIncludePath[IncludePathCount], basePath + 1, strlen(basePath) - 2); //+ and \0
@@ -762,8 +769,7 @@ int main (void)
         i++;
     }
 
-    //添加排除目录
-    PRINTLN("Read files end");
+    PRINTLN("Read files finished.");
 
     PRINTLN("Files count:%ld, pathLengthAll:%lld, perPathLength:%lld", fileCount, pathLengthAll, pathLengthAll/fileCount);
 
