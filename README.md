@@ -37,8 +37,9 @@ add paths per line in config.txt like this:
 ## How to use:
 * Search path or file name include with 123 and 456 and 789 in the same time:
     *  123(Space Key)456(Space Key)789
-    <img src="https://github.com/FuckedName/Found/raw/master/SearchFiles.png" width = "100" height = "100" div align=right />
-    ![](https://github.com/FuckedName/Found/raw/master/SearchFiles.png)
+    <img src="https://github.com/FuckedName/Found/blob/master/SearchFiles.png" width = "100" height = "100" div align=right />
+    ![](https://github.com/FuckedName/Found/blob/master/SearchFiles.png)
+    (https://github.com/FuckedName/Found/blob/master/SearchFiles.png)
     
      <br/> 
 * Search path or file name include 123 and search the text contain 456:
