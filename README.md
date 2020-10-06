@@ -1,3 +1,11 @@
+# Abstract：
+* Search file with many keys in part of file name or path.
+* Also can find by keywords when less searched items.
+* Can update index manually.
+* Very quickly.
+<br />
+
+
 # Support OS：
 * Linux
 <br />
