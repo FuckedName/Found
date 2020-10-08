@@ -111,14 +111,16 @@ int addFile(const char *path, int d_type)
 FILE *InitConfigFile(const char *puc_FileName)
 {
     FILE *pFile = fopen(puc_FileName, "r");
+    //PRINT_WITH_TIME("%d", pFile)
 
     if (pFile == NULL)
     {
         pFile = fopen(puc_FileName, "w");
         int ret = fputs("+/\n", pFile);
+        //PRINT_WITH_TIME("%d", ret)
         if (EOF == ret)
         {
-            PRINT_WITH_TIME("Write into config.txt error")
+            //PRINT_WITH_TIME("Write into config.txt error")
             fclose(pFile);
             exit(1);
         }
@@ -563,12 +565,23 @@ int main (void)
     memset(handleIncludePath, '\0', PATH_NUM * PATH_LENGTH);
     memset(handleExcludePath, '\0', PATH_NUM * PATH_LENGTH);
 
-    FILE *fp_config_file = InitConfigFile("config.txt");
+    FILE *fp_config_file = InitConfigFile("/usr/bin/config.txt");
+    //PRINT_WITH_TIME("%d", fp_config_file)
+
+    FILE *fp;
 
     memset(basePath, '\0', sizeof(basePath));
+
+    if((fp = fopen("/usr/bin/config.txt","r")) == NULL)
+    {
+        printf("Cannot open file: /usr/bin/config.txt!");
+        getch();
+        exit(1);
+    }
+
     while(NULL != (fgets(basePath, PATH_LENGTH, fp_config_file)))
     {
-        PRINT_WITH_TIME("get path in config.txt:%s", basePath);
+        //PRINT_WITH_TIME("get path in config.txt:%s", basePath);
         if(43 == basePath[0]) // '+'
         {
             memcpy(handleIncludePath[IncludePathCount], basePath + 1, strlen(basePath) - 2); //+ and \0
