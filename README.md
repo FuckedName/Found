@@ -49,7 +49,7 @@ add paths per line in config.txt like this:
     *  key1(SPACE or TAB) key2(ENTER)
     
        <br /> 
-* Clear update index:
+* Refresh index(after file add/delete):
     *  `(near by keys of number 1 and ESC)
     
     <br/>  
